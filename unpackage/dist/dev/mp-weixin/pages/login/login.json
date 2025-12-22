@@ -1,0 +1,12 @@
+{
+  "navigationBarTitleText": "登录",
+  "usingComponents": {
+    "up-avatar": "../../node-modules/uview-plus/components/u-avatar/u-avatar",
+    "up-input": "../../node-modules/uview-plus/components/u-input/u-input",
+    "up-form-item": "../../node-modules/uview-plus/components/u-form-item/u-form-item",
+    "up-form": "../../node-modules/uview-plus/components/u-form/u-form",
+    "up-button": "../../node-modules/uview-plus/components/u-button/u-button",
+    "up-checkbox": "../../node-modules/uview-plus/components/u-checkbox/u-checkbox",
+    "up-toast": "../../node-modules/uview-plus/components/u-toast/u-toast"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "uni-app",
+  "usingComponents": {
+    "up-notice-bar": "../../node-modules/uview-plus/components/u-notice-bar/u-notice-bar"
+  }
+}

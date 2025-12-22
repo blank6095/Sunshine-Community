@@ -1,0 +1,1 @@
+<view class="{{['item', virtualHostClass]}}" style="{{virtualHostStyle}}" hidden="{{virtualHostHidden || false}}" id="{{b}}"><text>非常抱歉，此功能需要登录后才能体验</text><button bindtap="{{a}}">我要登录</button></view>

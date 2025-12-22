@@ -1,0 +1,1 @@
+{"version":3,"file":"service.js","sources":["C:/Users/blank/Desktop/HBuilderX/plugins/uniapp-cli-vite/uniPage:/cGFnZXMvc2VydmljZS9zZXJ2aWNlLnZ1ZQ"],"sourcesContent":["import MiniProgramPage from 'D:/DevelopTest/MiniProgram/test4/pages/service/service.vue'\nwx.createPage(MiniProgramPage)"],"names":["MiniProgramPage"],"mappings":";;;;;;;;;;AACA,GAAG,WAAWA,SAAe;"}

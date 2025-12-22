@@ -1,0 +1,96 @@
+{
+	"easycom": {
+		// 注意一定要放在custom里，否则无效，https://ask.dcloud.net.cn/question/131175
+		"custom": {
+			"^u--(.*)": "uview-plus/components/u-$1/u-$1.vue",
+			"^up-(.*)": "uview-plus/components/u-$1/u-$1.vue",
+			"^u-([^-].*)": "uview-plus/components/u-$1/u-$1.vue"
+		}
+	},
+	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
+		{
+			"path": "pages/index/index",
+			"style": {
+				"navigationBarTitleText": "uni-app"
+			}
+		},
+		{
+			"path": "pages/service/service",
+			"style": {
+				"navigationBarTitleText": "服务"
+			}
+		},
+		{
+			"path": "pages/my/my",
+			"style": {
+				"navigationBarTitleText": "我的"
+			}
+		},
+		{
+			"path": "pages/goLogin/goLogin",
+			"style": {
+				"navigationBarTitleText": ""
+			}
+		},
+		{
+			"path": "pages/login/login",
+			"style": {
+				"navigationBarTitleText": "登录"
+			}
+		},
+		{
+			"path": "pages/baoxiu/baoxiu",
+			"style": {
+				"navigationBarTitleText": "保修"
+			}
+		},
+		{
+			"path": "pages/parkApply/parkApply",
+			"style": {
+				"navigationBarTitleText": ""
+			}
+		},
+		{
+			"path": "pages/park/park",
+			"style": {
+				"navigationBarTitleText": "chewei"
+			}
+		},
+		{
+			"path": "pages/ownerInfo/ownerInfo",
+			"style": {
+				"navigationBarTitleText": ""
+			}
+		}
+	],
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "uni-app",
+		"navigationBarBackgroundColor": "#F8F8F8",
+		"backgroundColor": "#F8F8F8"
+	},
+	"tabBar": {
+		"selectedColor": "#00ff7f",
+		"list": [
+			{
+				"text": "首页",
+				"pagePath": "pages/index/index",
+				"iconPath": "/static/tabbar/home.png",
+				"selectedIconPath": "/static/tabbar/home_avtive.png"
+			},
+			{
+				"text": "服务",
+				"pagePath": "pages/service/service",
+				"iconPath": "/static/tabbar/fuwu.png",
+				"selectedIconPath": "/static/tabbar/fuwu_avtive.png"
+			},
+			{
+				"text": "我的",
+				"pagePath": "pages/my/my",
+				"iconPath": "/static/tabbar/wode.png",
+				"selectedIconPath": "/static/tabbar/wode_avtive.png"
+			}
+		]
+	},
+	"uniIdRouter": {}
+}

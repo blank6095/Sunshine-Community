@@ -1,0 +1,1 @@
+{"version":3,"file":"config.js","sources":["utils/config.js"],"sourcesContent":["export const baseUrl = 'http://127.0.0.1:8008/'\nexport const appId = '992019111758490006' \nexport const DEFAULT_COMMUNITY_ID = '2025072783670006'\r\n\n"],"names":[],"mappings":";AAAY,MAAC,UAAU;AACX,MAAC,QAAQ;AACT,MAAC,uBAAuB;;;;"}

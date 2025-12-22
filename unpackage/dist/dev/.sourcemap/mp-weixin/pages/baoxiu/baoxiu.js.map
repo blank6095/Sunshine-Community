@@ -1,0 +1,1 @@
+{"version":3,"file":"baoxiu.js","sources":["C:/Users/blank/Desktop/HBuilderX/plugins/uniapp-cli-vite/uniPage:/cGFnZXMvYmFveGl1L2Jhb3hpdS52dWU"],"sourcesContent":["import MiniProgramPage from 'D:/DevelopTest/MiniProgram/test4/pages/baoxiu/baoxiu.vue'\nwx.createPage(MiniProgramPage)"],"names":["MiniProgramPage"],"mappings":";;;;;;;;;;AACA,GAAG,WAAWA,SAAe;"}

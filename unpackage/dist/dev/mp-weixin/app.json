@@ -1,0 +1,43 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/service/service",
+    "pages/my/my",
+    "pages/goLogin/goLogin",
+    "pages/login/login",
+    "pages/baoxiu/baoxiu",
+    "pages/parkApply/parkApply",
+    "pages/park/park",
+    "pages/ownerInfo/ownerInfo"
+  ],
+  "window": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "uni-app",
+    "navigationBarBackgroundColor": "#F8F8F8",
+    "backgroundColor": "#F8F8F8"
+  },
+  "tabBar": {
+    "selectedColor": "#00ff7f",
+    "list": [
+      {
+        "text": "首页",
+        "pagePath": "pages/index/index",
+        "iconPath": "/static/tabbar/home.png",
+        "selectedIconPath": "/static/tabbar/home_avtive.png"
+      },
+      {
+        "text": "服务",
+        "pagePath": "pages/service/service",
+        "iconPath": "/static/tabbar/fuwu.png",
+        "selectedIconPath": "/static/tabbar/fuwu_avtive.png"
+      },
+      {
+        "text": "我的",
+        "pagePath": "pages/my/my",
+        "iconPath": "/static/tabbar/wode.png",
+        "selectedIconPath": "/static/tabbar/wode_avtive.png"
+      }
+    ]
+  },
+  "usingComponents": {}
+}

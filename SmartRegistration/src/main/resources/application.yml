@@ -1,0 +1,62 @@
+spring:
+  application:
+    name: SmartRegistration
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/smart_registration_db?useSSL=false&serverTimezone=UTC&useLegacyDatetimeCode=false
+    username: root
+    password: "123456"
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+jwt:
+  secret: your-secret-key-here
+  expiration:
+    default: 86400
+    unit: seconds
+    access-token: 3600
+    refresh-token: 604800
+
+auth:
+  exemption:
+    enable-logging: true
+    enable-dynamic-reload: true
+    rules:
+      - path: /auth/login
+        http-methods:
+          - POST
+        description: 登录接口豁免认证
+        pattern-type: EXACT
+        enabled: true
+      - path: /auth/register
+        http-methods:
+          - POST
+        description: 注册接口豁免认证
+        pattern-type: EXACT
+        enabled: true
+      - path: /health
+        http-methods:
+          - GET
+        description: 健康检查接口豁免认证
+        pattern-type: EXACT
+        enabled: true
+      - path: /public/**
+        http-methods:
+          - GET
+          - POST
+        description: 公共接口通配符豁免
+        pattern-type: ANT
+        enabled: true
+
+server:
+  port: 8081
+  servlet:
+    context-path: /api/v1

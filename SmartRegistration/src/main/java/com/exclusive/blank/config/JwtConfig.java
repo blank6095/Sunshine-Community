@@ -4,6 +4,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 import jakarta.annotation.PostConstruct;
+import java.util.Base64;
 
 @Configuration
 @ConfigurationProperties(prefix = "jwt")
@@ -15,7 +16,12 @@ public class JwtConfig {
     @PostConstruct
     public void init() {
         if (secret == null || secret.isEmpty()) {
-            secret = "default-secret-key-change-in-production";
+            secret = "default-secret-key-change-in-production-must-be-at-least-64-bytes-long";
+        }
+        if (secret.length() < 64) {
+            byte[] padded = new byte[64];
+            System.arraycopy(secret.getBytes(), 0, padded, 0, Math.min(secret.getBytes().length, 64));
+            secret = Base64.getEncoder().encodeToString(padded);
         }
     }
 

@@ -28,7 +28,7 @@ public class GlobalExceptionHandler {
         Map<String, Object> response = new HashMap<>();
         response.put("code", 500);
         response.put("message", "服务器内部错误");
-        response.put("error", e.getMessage());
+        response.put("error", null);
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }

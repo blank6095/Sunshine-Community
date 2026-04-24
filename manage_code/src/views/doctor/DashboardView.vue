@@ -1,29 +1,35 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { getSchedulesByDoctor, getAppointmentsByDoctor } from '@/api'
 import { ElMessage } from 'element-plus'
+import { ArrowRight } from '@element-plus/icons-vue'
+import dayjs from 'dayjs'
 import type { Schedule, Appointment } from '@/types'
 
+const router = useRouter()
 const userStore = useUserStore()
 const loading = ref(false)
-const scheduleCount = ref(0)
-const appointmentCount = ref(0)
-const pendingAppointments = ref(0)
-const todaySchedules = ref<Schedule[]>([])
+const schedules = ref<Schedule[]>([])
+const appointments = ref<Appointment[]>([])
+const todayAppointments = ref<Appointment[]>([])
 
 onMounted(async () => {
   loading.value = true
   try {
     if (userStore.user) {
-      const schedulesRes = await getSchedulesByDoctor(userStore.user.id)
-      todaySchedules.value = schedulesRes.data
-      scheduleCount.value = schedulesRes.data.length
+      const [schedulesRes, appointmentsRes] = await Promise.all([
+        getSchedulesByDoctor(userStore.user.id),
+        getAppointmentsByDoctor(userStore.user.id),
+      ])
+      schedules.value = schedulesRes.data
+      appointments.value = appointmentsRes.data
 
-      const appointmentsRes = await getAppointmentsByDoctor(userStore.user.id)
-      const appointments: Appointment[] = appointmentsRes.data
-      appointmentCount.value = appointments.length
-      pendingAppointments.value = appointments.filter((a) => a.status === 'PENDING').length
+      const today = dayjs().format('YYYY-MM-DD')
+      todayAppointments.value = appointments.value.filter((a) =>
+        a.appointmentTime.startsWith(today) && a.status !== 'CANCELLED'
+      )
     }
   } catch (error) {
     ElMessage.error('加载数据失败')
@@ -32,19 +38,73 @@ onMounted(async () => {
   }
 })
 
-const stats = computed(() => [
-  { title: '今日排班', value: scheduleCount.value, icon: 'Calendar', color: '#409eff' },
-  { title: '总预约数', value: appointmentCount.value, icon: 'Document', color: '#67c23a' },
-  { title: '待确认预约', value: pendingAppointments.value, icon: 'Clock', color: '#e6a23c' },
-])
+const stats = computed(() => {
+  const today = dayjs().format('YYYY-MM-DD')
+  const todaySchedules = schedules.value.filter((s) => s.date === today && s.status === 'ACTIVE')
+  const pendingCount = appointments.value.filter((a) => a.status === 'PENDING').length
+  const confirmedCount = appointments.value.filter((a) => a.status === 'CONFIRMED').length
+  const completedCount = appointments.value.filter((a) => a.status === 'COMPLETED').length
+  const totalSlots = todaySchedules.reduce((sum, s) => sum + s.maxPatients, 0)
+  const bookedSlots = todaySchedules.reduce((sum, s) => sum + (s.maxPatients - s.availableSlots), 0)
+
+  return [
+    { title: '今日排班', value: todaySchedules.length, icon: 'Calendar', color: '#409eff' },
+    { title: '待确认', value: pendingCount, icon: 'Clock', color: '#e6a23c' },
+    { title: '已确认', value: confirmedCount, icon: 'CircleCheck', color: '#00bcd4' },
+    { title: '已完成', value: completedCount, icon: 'SuccessFilled', color: '#67c23a' },
+    { title: '今日号源', value: totalSlots, icon: 'Tickets', color: '#9c27b0' },
+    { title: '已预约', value: bookedSlots, icon: 'User', color: '#f56c6c' },
+  ]
+})
+
+const completionRate = computed(() => {
+  const completed = appointments.value.filter((a) => a.status === 'COMPLETED').length
+  if (appointments.value.length === 0) return 0
+  return Math.round((completed / appointments.value.length) * 100)
+})
+
+const pendingRate = computed(() => {
+  const pending = appointments.value.filter((a) => a.status === 'PENDING').length
+  if (appointments.value.length === 0) return 0
+  return Math.round((pending / appointments.value.length) * 100)
+})
+
+const getStatusType = (status: string) => {
+  const map: Record<string, string> = {
+    PENDING: 'warning',
+    CONFIRMED: 'primary',
+    COMPLETED: 'success',
+    CANCELLED: 'danger',
+  }
+  return map[status] || 'info'
+}
+
+const getStatusText = (status: string) => {
+  const map: Record<string, string> = {
+    PENDING: '待确认',
+    CONFIRMED: '已确认',
+    COMPLETED: '已完成',
+    CANCELLED: '已取消',
+  }
+  return map[status] || status
+}
+
+const formatTime = (time: string) => {
+  return time.replace('T', ' ')
+}
 </script>
 
 <template>
   <div class="dashboard" v-loading="loading">
-    <h2 class="page-title">欢迎，{{ userStore.user?.name }}</h2>
+    <div class="page-header">
+      <h2 class="page-title">欢迎，{{ userStore.user?.name }}</h2>
+      <div class="header-time">
+        {{ new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }) }}
+      </div>
+    </div>
 
-    <el-row :gutter="12" class="stats-row">
-      <el-col v-for="stat in stats" :key="stat.title" :xs="12" :sm="8" :md="8">
+    <el-row :gutter="16" class="stats-row">
+      <el-col v-for="stat in stats" :key="stat.title" :xs="12" :sm="8" :md="6" :lg="4">
         <el-card class="stat-card" shadow="hover">
           <div class="stat-content">
             <div class="stat-icon" :style="{ backgroundColor: stat.color }">
@@ -59,28 +119,101 @@ const stats = computed(() => [
       </el-col>
     </el-row>
 
-    <el-card class="schedule-card">
-      <template #header>
-        <div class="card-header">
-          <span>今日排班</span>
-        </div>
-      </template>
-      <el-empty v-if="todaySchedules.length === 0" description="暂无排班" />
-      <el-table v-else :data="todaySchedules" style="width: 100%">
-        <el-table-column prop="date" label="日期" width="120" />
-        <el-table-column prop="startTime" label="开始时间" width="100" />
-        <el-table-column prop="endTime" label="结束时间" width="100" />
-        <el-table-column prop="maxPatients" label="最大预约人数" min-width="120" />
-        <el-table-column prop="availableSlots" label="剩余名额" min-width="100" />
-        <el-table-column prop="status" label="状态" min-width="100">
-          <template #default="{ row }">
-            <el-tag :type="row.status === 'ACTIVE' ? 'success' : 'danger'">
-              {{ row.status === 'ACTIVE' ? '正常' : '已取消' }}
-            </el-tag>
+    <el-row :gutter="16" class="content-row">
+      <el-col :xs="24" :md="16">
+        <el-card class="appointment-card">
+          <template #header>
+            <div class="card-header">
+              <span>今日预约</span>
+              <el-button type="primary" link @click="router.push('/doctor/appointments')">
+                查看全部<el-icon><ArrowRight /></el-icon>
+              </el-button>
+            </div>
           </template>
-        </el-table-column>
-      </el-table>
-    </el-card>
+          <el-empty v-if="todayAppointments.length === 0" description="今日暂无预约" />
+          <el-table v-else :data="todayAppointments" size="small" style="width: 100%">
+            <el-table-column prop="patientName" label="患者" width="100" />
+            <el-table-column prop="appointmentTime" label="预约时间" width="160">
+              <template #default="{ row }">
+                {{ formatTime(row.appointmentTime) }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="symptoms" label="症状描述" min-width="150" show-overflow-tooltip />
+            <el-table-column prop="status" label="状态" width="90">
+              <template #default="{ row }">
+                <el-tag :type="getStatusType(row.status)" size="small">{{ getStatusText(row.status) }}</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="100" fixed="right">
+              <template #default="{ row }">
+                <el-button v-if="row.status === 'PENDING'" size="small" type="success" link @click="router.push('/doctor/appointments')">
+                  确认
+                </el-button>
+                <el-button v-if="row.status === 'CONFIRMED'" size="small" type="primary" link @click="router.push('/doctor/appointments')">
+                  完成
+                </el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-card>
+      </el-col>
+
+      <el-col :xs="24" :md="8">
+        <el-card class="analysis-card">
+          <template #header>
+            <div class="card-header">
+              <span>工作概览</span>
+            </div>
+          </template>
+          <div class="analysis-content">
+            <div class="analysis-item">
+              <div class="analysis-label">完成率</div>
+              <div class="analysis-value" :style="{ color: completionRate >= 60 ? '#67c23a' : '#e6a23c' }">
+                {{ completionRate }}%
+              </div>
+              <el-progress :percentage="completionRate" :color="completionRate >= 60 ? '#67c23a' : '#e6a23c'" :stroke-width="8" />
+            </div>
+            <div class="analysis-item">
+              <div class="analysis-label">待处理占比</div>
+              <div class="analysis-value" :style="{ color: pendingRate <= 30 ? '#67c23a' : pendingRate <= 50 ? '#e6a23c' : '#f56c6c' }">
+                {{ pendingRate }}%
+              </div>
+              <el-progress :percentage="pendingRate" :color="pendingRate <= 30 ? '#67c23a' : pendingRate <= 50 ? '#e6a23c' : '#f56c6c'" :stroke-width="8" />
+            </div>
+            <div class="analysis-item">
+              <div class="analysis-label">总预约数</div>
+              <div class="analysis-value">{{ appointments.length }}</div>
+            </div>
+            <div class="analysis-item">
+              <div class="analysis-label">总排班数</div>
+              <div class="analysis-value">{{ schedules.length }}</div>
+            </div>
+          </div>
+        </el-card>
+
+        <el-card class="quick-card" style="margin-top: 16px">
+          <template #header>
+            <div class="card-header">
+              <span>快速操作</span>
+            </div>
+          </template>
+          <div class="quick-actions">
+            <router-link to="/doctor/schedule" class="quick-link">
+              <el-icon color="#409eff"><Calendar /></el-icon>
+              <span>日程管理</span>
+            </router-link>
+            <router-link to="/doctor/appointments" class="quick-link">
+              <el-icon color="#67c23a"><Document /></el-icon>
+              <span>预约管理</span>
+            </router-link>
+            <router-link to="/doctor/profile" class="quick-link">
+              <el-icon color="#e6a23c"><User /></el-icon>
+              <span>个人信息</span>
+            </router-link>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
   </div>
 </template>
 
@@ -91,8 +224,17 @@ const stats = computed(() => [
   box-sizing: border-box;
 }
 
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
 .page-title {
-  margin: 0 0 1.5rem;
+  margin: 0;
   font-size: clamp(1.25rem, 2vw, 1.5rem);
   color: var(--text-primary);
   font-weight: 600;
@@ -110,6 +252,14 @@ const stats = computed(() => [
   height: 1.2em;
   background: linear-gradient(135deg, var(--primary-color), #669df6);
   border-radius: 2px;
+}
+
+.header-time {
+  font-size: clamp(0.8rem, 1vw, 0.9rem);
+  color: var(--text-secondary);
+  padding: 6px 12px;
+  background: var(--background-color);
+  border-radius: 6px;
 }
 
 .stats-row {
@@ -170,13 +320,21 @@ const stats = computed(() => [
   text-overflow: ellipsis;
 }
 
-.schedule-card {
-  margin-top: 0.75rem;
-  border-radius: 10px;
-  overflow: hidden;
+.content-row {
+  margin-bottom: 1rem;
 }
 
-.schedule-card :deep(.el-card__header) {
+.appointment-card,
+.analysis-card,
+.quick-card {
+  border-radius: 10px;
+  overflow: hidden;
+  height: 100%;
+}
+
+.appointment-card :deep(.el-card__header),
+.analysis-card :deep(.el-card__header),
+.quick-card :deep(.el-card__header) {
   padding: 14px 18px;
   background: linear-gradient(135deg, #f8f9fa, #ffffff);
   border-bottom: 1px solid var(--border-color);
@@ -189,6 +347,65 @@ const stats = computed(() => [
   font-weight: 600;
   font-size: clamp(0.9rem, 1.2vw, 1rem);
   color: var(--text-primary);
+}
+
+.analysis-content {
+  padding: 8px 0;
+}
+
+.analysis-item {
+  margin-bottom: 1.25rem;
+}
+
+.analysis-item:last-child {
+  margin-bottom: 0;
+}
+
+.analysis-label {
+  font-size: clamp(0.75rem, 1vw, 0.85rem);
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.analysis-value {
+  font-size: clamp(1.25rem, 2vw, 1.75rem);
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--primary-color);
+}
+
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 0.75rem;
+  padding: 8px 0;
+}
+
+.quick-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 8px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  background: var(--background-color);
+}
+
+.quick-link:hover {
+  background: #ecf5ff;
+  transform: translateY(-2px);
+}
+
+.quick-link .el-icon {
+  font-size: 24px;
+}
+
+.quick-link span {
+  font-size: clamp(0.75rem, 1vw, 0.85rem);
+  color: var(--text-regular);
+  font-weight: 500;
 }
 
 @media (max-width: 768px) {
@@ -206,6 +423,11 @@ const stats = computed(() => [
 
   .stat-content {
     gap: 0.75rem;
+  }
+
+  .quick-actions {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.625rem;
   }
 }
 
@@ -232,6 +454,15 @@ const stats = computed(() => [
 
   .stat-label {
     font-size: 0.75rem;
+  }
+
+  .quick-actions {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 </style>

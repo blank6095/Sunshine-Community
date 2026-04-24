@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { Search, Phone, OfficeBuilding } from '@element-plus/icons-vue'
+import { ref, computed, onMounted } from 'vue'
+import { Search, Phone, OfficeBuilding, Plus, RefreshLeft } from '@element-plus/icons-vue'
 import { getDoctors, getDepartments, createDoctor, updateDoctor, deleteDoctor } from '@/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance } from 'element-plus'
 import type { Doctor, Department } from '@/types'
+import PaginationBar from '@/components/PaginationBar.vue'
 
 const loading = ref(false)
 const doctors = ref<Doctor[]>([])
@@ -13,7 +14,12 @@ const dialogVisible = ref(false)
 const dialogTitle = ref('添加医生')
 const isEdit = ref(false)
 const formRef = ref<FormInstance>()
+
 const searchQuery = ref('')
+const selectedDepartment = ref('')
+const selectedStatus = ref('')
+const currentPage = ref(1)
+const pageSize = ref(10)
 
 const form = ref({
   id: null as number | null,
@@ -31,27 +37,46 @@ const rules = {
   title: [{ required: true, message: '请输入职称', trigger: 'blur' }],
 }
 
-const filteredDoctors = ref<Doctor[]>([])
+const departmentOptions = computed(() => {
+  return departments.value.map((d) => ({ label: d.name, value: d.id.toString() }))
+})
 
-const applyFilter = () => {
-  if (!searchQuery.value.trim()) {
-    filteredDoctors.value = doctors.value
-    return
+const filteredDoctors = computed(() => {
+  let result = doctors.value
+
+  if (selectedDepartment.value) {
+    result = result.filter((d) => d.departmentId?.toString() === selectedDepartment.value)
   }
-  const q = searchQuery.value.toLowerCase()
-  filteredDoctors.value = doctors.value.filter((d) =>
-    d.userName?.toLowerCase().includes(q) ||
-    d.departmentName?.toLowerCase().includes(q) ||
-    d.title?.toLowerCase().includes(q)
-  )
-}
+
+  if (selectedStatus.value) {
+    result = result.filter((d) => d.status === selectedStatus.value)
+  }
+
+  if (searchQuery.value.trim()) {
+    const q = searchQuery.value.toLowerCase()
+    result = result.filter(
+      (d) =>
+        d.userName?.toLowerCase().includes(q) ||
+        d.departmentName?.toLowerCase().includes(q) ||
+        d.title?.toLowerCase().includes(q) ||
+        d.specialty?.toLowerCase().includes(q)
+    )
+  }
+
+  return result
+})
+
+const paginatedDoctors = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  const end = start + pageSize.value
+  return filteredDoctors.value.slice(start, end)
+})
 
 const loadDoctors = async () => {
   loading.value = true
   try {
     const res = await getDoctors()
     doctors.value = res.data
-    filteredDoctors.value = res.data
   } catch (error) {
     ElMessage.error('加载医生列表失败')
   } finally {
@@ -66,6 +91,10 @@ const loadDepartments = async () => {
   } catch (error) {
     console.error('加载科室列表失败')
   }
+}
+
+const handlePageChange = () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 const handleAdd = () => {
@@ -136,6 +165,13 @@ const handleDelete = async (row: any) => {
   }
 }
 
+const handleReset = () => {
+  searchQuery.value = ''
+  selectedDepartment.value = ''
+  selectedStatus.value = ''
+  currentPage.value = 1
+}
+
 const getStatusType = (status: string) => {
   return status === 'ACTIVE' ? 'success' : 'danger'
 }
@@ -155,22 +191,43 @@ onMounted(() => {
     <div class="page-header">
       <h2 class="page-title">医生管理</h2>
       <div class="header-actions">
-        <el-input
-          v-model="searchQuery"
-          placeholder="搜索姓名/科室/职称"
-          :prefix-icon="Search"
-          clearable
-          style="width: 220px; margin-right: 12px"
-          @input="applyFilter"
-          @clear="applyFilter"
-        />
-        <el-button type="primary" @click="handleAdd">
-          <el-icon><Plus /></el-icon>添加医生
-        </el-button>
+        <el-button @click="handleReset" :icon="RefreshLeft">重置筛选</el-button>
+        <el-button type="primary" @click="handleAdd" :icon="Plus">添加医生</el-button>
       </div>
     </div>
 
-    <el-table v-loading="loading" :data="filteredDoctors" style="width: 100%" stripe>
+    <el-card class="filter-card" shadow="never">
+      <el-row :gutter="16">
+        <el-col :xs="24" :sm="8" :md="6">
+          <el-input
+            v-model="searchQuery"
+            placeholder="搜索姓名/科室/职称"
+            :prefix-icon="Search"
+            clearable
+          />
+        </el-col>
+        <el-col :xs="24" :sm="8" :md="5">
+          <el-select v-model="selectedDepartment" placeholder="选择科室" clearable style="width: 100%">
+            <el-option label="全部科室" value="" />
+            <el-option v-for="dept in departmentOptions" :key="dept.value" :label="dept.label" :value="dept.value" />
+          </el-select>
+        </el-col>
+        <el-col :xs="24" :sm="8" :md="5">
+          <el-select v-model="selectedStatus" placeholder="选择状态" clearable style="width: 100%">
+            <el-option label="全部状态" value="" />
+            <el-option label="在职" value="ACTIVE" />
+            <el-option label="离职" value="INACTIVE" />
+          </el-select>
+        </el-col>
+        <el-col :xs="24" :sm="8" :md="4">
+          <el-tag size="large" type="info">
+            总计：{{ filteredDoctors.length }} 条
+          </el-tag>
+        </el-col>
+      </el-row>
+    </el-card>
+
+    <el-table v-loading="loading" :data="paginatedDoctors" style="width: 100%; margin-top: 16px" stripe>
       <el-table-column label="医生信息" min-width="200">
         <template #default="{ row }">
           <div class="doctor-info">
@@ -217,6 +274,14 @@ onMounted(() => {
       </el-table-column>
     </el-table>
 
+    <PaginationBar
+      v-if="filteredDoctors.length > 0"
+      v-model:current-page="currentPage"
+      v-model:page-size="pageSize"
+      :total="filteredDoctors.length"
+      @change="handlePageChange"
+    />
+
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="600px">
       <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
         <el-form-item label="用户" prop="userId">
@@ -262,9 +327,9 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .page-title {
@@ -295,8 +360,16 @@ onMounted(() => {
   gap: 0.75rem;
 }
 
-.header-actions .el-input {
-  width: clamp(180px, 20vw, 240px);
+.filter-card {
+  border-radius: 8px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #fff;
+}
+
+.filter-card :deep(.el-card__body) {
+  padding: clamp(0.75rem, 2vw, 1rem);
 }
 
 .doctor-info {
@@ -369,17 +442,8 @@ onMounted(() => {
     width: 100%;
   }
 
-  .header-actions .el-input {
+  .header-actions .el-button {
     flex: 1;
-    min-width: 150px;
-  }
-
-  .doctor-info {
-    gap: 0.625rem;
-  }
-
-  .doctor-details {
-    gap: 0.125rem;
   }
 }
 </style>

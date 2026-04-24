@@ -5,6 +5,7 @@ import { getSchedules, getDoctors, getDepartments, createSchedule, updateSchedul
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance } from 'element-plus'
 import type { Schedule, Doctor, Department } from '@/types'
+import PaginationBar from '@/components/PaginationBar.vue'
 
 const loading = ref(false)
 const schedules = ref<Schedule[]>([])
@@ -320,6 +321,20 @@ const handleReset = () => {
   selectedDepartment.value = ''
   selectedDoctor.value = ''
   searchQuery.value = ''
+  currentPage.value = 1
+}
+
+const currentPage = ref(1)
+const pageSize = ref(10)
+
+const paginatedSchedules = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  const end = start + pageSize.value
+  return filteredSchedules.value.slice(start, end)
+})
+
+const handlePageChange = () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 const getStatusType = (status: string) => {
@@ -389,7 +404,7 @@ onMounted(() => {
       </el-row>
     </el-card>
 
-    <el-table v-loading="loading" :data="filteredSchedules" style="width: 100%; margin-top: 16px" stripe>
+    <el-table v-loading="loading" :data="paginatedSchedules" style="width: 100%; margin-top: 16px" stripe>
       <el-table-column prop="doctorName" label="医生姓名" width="120" />
       <el-table-column prop="departmentName" label="科室" width="120" />
       <el-table-column prop="date" label="日期" width="120" />
@@ -420,6 +435,14 @@ onMounted(() => {
         </template>
       </el-table-column>
     </el-table>
+
+    <PaginationBar
+      v-if="filteredSchedules.length > 0"
+      v-model:current-page="currentPage"
+      v-model:page-size="pageSize"
+      :total="filteredSchedules.length"
+      @change="handlePageChange"
+    />
 
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px">
       <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">

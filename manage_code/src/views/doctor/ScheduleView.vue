@@ -7,6 +7,7 @@ import { Plus, Calendar, Warning } from '@element-plus/icons-vue'
 import dayjs from 'dayjs'
 import type { FormInstance } from 'element-plus'
 import type { Schedule } from '@/types'
+import PaginationBar from '@/components/PaginationBar.vue'
 
 const userStore = useUserStore()
 const loading = ref(false)
@@ -174,6 +175,19 @@ const nextMonth = () => {
   currentDate.value = dayjs(currentDate.value).add(1, 'month').format('YYYY-MM')
 }
 
+const currentPage = ref(1)
+const pageSize = ref(10)
+
+const paginatedSchedules = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  const end = start + pageSize.value
+  return schedules.value.slice(start, end)
+})
+
+const handlePageChange = () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
 const getStatusType = (status: string) => {
   return status === 'ACTIVE' ? 'success' : 'danger'
 }
@@ -228,7 +242,7 @@ onMounted(() => {
     </el-row>
 
     <div v-if="viewMode === 'table'">
-      <el-table v-loading="loading" :data="schedules" style="width: 100%; margin-top: 16px" stripe>
+      <el-table v-loading="loading" :data="paginatedSchedules" style="width: 100%; margin-top: 16px" stripe>
         <el-table-column prop="date" label="日期" width="120" />
         <el-table-column prop="startTime" label="开始时间" width="100" />
         <el-table-column prop="endTime" label="结束时间" width="100" />
@@ -246,6 +260,14 @@ onMounted(() => {
           </template>
         </el-table-column>
       </el-table>
+
+      <PaginationBar
+        v-if="schedules.length > 0"
+        v-model:current-page="currentPage"
+        v-model:page-size="pageSize"
+        :total="schedules.length"
+        @change="handlePageChange"
+      />
     </div>
 
     <div v-else class="calendar-view">
@@ -325,7 +347,7 @@ onMounted(() => {
 
 <style scoped>
 .schedule-view {
-  padding: 1rem;
+  padding: clamp(12px, 2vw, 24px);
   width: 100%;
   box-sizing: border-box;
 }
@@ -342,15 +364,29 @@ onMounted(() => {
 .page-title {
   margin: 0;
   font-size: clamp(1.25rem, 2vw, 1.5rem);
-  color: #303133;
+  color: var(--text-primary);
   font-weight: 600;
+  position: relative;
+  padding-left: 12px;
+}
+
+.page-title::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 1.2em;
+  background: linear-gradient(135deg, var(--primary-color), #669df6);
+  border-radius: 2px;
 }
 
 .header-actions {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
 .stats-row {

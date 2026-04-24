@@ -55,8 +55,14 @@ auth:
         description: 公共接口通配符豁免
         pattern-type: ANT
         enabled: true
+      - path: /departments
+        http-methods:
+          - GET
+        description: 科室列表接口豁免认证
+        pattern-type: EXACT
+        enabled: true
 
 server:
-  port: 82
+  port: 8080
   servlet:
     context-path: /api/v1

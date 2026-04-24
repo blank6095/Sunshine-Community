@@ -1,7 +1,3 @@
-/**
-* 显示消息提示框
-* @param content 提示的标题
-*/
 export function toast(content) {
   uni.showToast({
     icon: 'none',
@@ -9,28 +5,23 @@ export function toast(content) {
   })
 }
 
-/**
-* 显示模态弹窗
-* @param content 提示的标题
-*/
-export function showConfirm(content) {
+export function showConfirm(content, title = '提示') {
   return new Promise((resolve, reject) => {
     uni.showModal({
-      title: '提示',
+      title: title,
       content: content,
       cancelText: '取消',
       confirmText: '确定',
       success: function(res) {
         resolve(res)
+      },
+      fail: function(err) {
+        reject(err)
       }
     })
   })
 }
 
-/**
-* 参数处理
-* @param params 参数
-*/
 export function tansParams(params) {
   let result = ''
   for (const propName of Object.keys(params)) {
@@ -51,4 +42,63 @@ export function tansParams(params) {
     }
   }
   return result
+}
+
+export function showLoading(content = '加载中...') {
+  uni.showLoading({
+    title: content,
+    mask: true
+  })
+}
+
+export function hideLoading() {
+  uni.hideLoading()
+}
+
+export function showErrorModal(content, title = '错误') {
+  return new Promise((resolve, reject) => {
+    uni.showModal({
+      title: title,
+      content: content,
+      showCancel: false,
+      success: function(res) {
+        resolve(res)
+      }
+    })
+  })
+}
+
+export function showSuccessToast(content) {
+  uni.showToast({
+    icon: 'success',
+    title: content
+  })
+}
+
+export function redirectToWithParam(url, params = {}) {
+  const queryString = Object.keys(params)
+    .map(key => `${key}=${encodeURIComponent(params[key])}`)
+    .join('&')
+  const fullUrl = queryString ? `${url}?${queryString}` : url
+  uni.redirectTo({ url: fullUrl })
+}
+
+export function navigateToWithParam(url, params = {}) {
+  const queryString = Object.keys(params)
+    .map(key => `${key}=${encodeURIComponent(params[key])}`)
+    .join('&')
+  const fullUrl = queryString ? `${url}?${queryString}` : url
+  uni.navigateTo({ url: fullUrl })
+}
+
+export function getCurrentPageUrl() {
+  const pages = getCurrentPages()
+  if (pages.length === 0) return ''
+  const currentPage = pages[pages.length - 1]
+  const route = '/' + currentPage.route
+  const options = currentPage.options || {}
+  const queryString = Object.keys(options)
+    .map(key => `${key}=${encodeURIComponent(options[key])}`)
+    .join('&')
+  return route + (queryString ? '?' + queryString : '')
 }

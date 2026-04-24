@@ -1,9 +1,10 @@
 package com.exclusive.blank.controller;
 
+import com.exclusive.blank.dto.ApiResponse;
+import com.exclusive.blank.dto.DepartmentResponse;
 import com.exclusive.blank.model.Department;
 import com.exclusive.blank.service.DepartmentService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -18,35 +19,35 @@ public class DepartmentController {
     private DepartmentService departmentService;
 
     @GetMapping
-    public ResponseEntity<List<Department>> getDepartments() {
-        List<Department> departments = departmentService.getDepartments();
-        return ResponseEntity.ok(departments);
+    public ResponseEntity<ApiResponse<List<DepartmentResponse>>> getDepartments() {
+        List<DepartmentResponse> departments = departmentService.getDepartments();
+        return ResponseEntity.ok(ApiResponse.success(departments));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Department> getDepartmentById(@PathVariable Long id) {
-        Department department = departmentService.getDepartmentById(id).orElseThrow();
-        return ResponseEntity.ok(department);
+    public ResponseEntity<ApiResponse<DepartmentResponse>> getDepartmentById(@PathVariable Long id) {
+        DepartmentResponse department = departmentService.getDepartmentById(id);
+        return ResponseEntity.ok(ApiResponse.success(department));
     }
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Department> createDepartment(@RequestBody Department department) {
-        Department createdDepartment = departmentService.createDepartment(department);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdDepartment);
+    public ResponseEntity<ApiResponse<DepartmentResponse>> createDepartment(@RequestBody Department department) {
+        DepartmentResponse createdDepartment = departmentService.createDepartment(department);
+        return ResponseEntity.status(201).body(ApiResponse.created(createdDepartment));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Department> updateDepartment(@PathVariable Long id, @RequestBody Department department) {
-        Department updatedDepartment = departmentService.updateDepartment(id, department);
-        return ResponseEntity.ok(updatedDepartment);
+    public ResponseEntity<ApiResponse<DepartmentResponse>> updateDepartment(@PathVariable Long id, @RequestBody Department department) {
+        DepartmentResponse updatedDepartment = departmentService.updateDepartment(id, department);
+        return ResponseEntity.ok(ApiResponse.success("更新成功", updatedDepartment));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteDepartment(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteDepartment(@PathVariable Long id) {
         departmentService.deleteDepartment(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponse.success("删除成功", null));
     }
 }

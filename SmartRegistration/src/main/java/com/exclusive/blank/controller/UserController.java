@@ -1,9 +1,10 @@
 package com.exclusive.blank.controller;
 
+import com.exclusive.blank.dto.ApiResponse;
+import com.exclusive.blank.dto.UserResponse;
 import com.exclusive.blank.model.User;
 import com.exclusive.blank.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -19,36 +20,29 @@ public class UserController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<User>> getUsers() {
-        List<User> users = userService.getUsers();
-        return ResponseEntity.ok(users);
+    public ResponseEntity<ApiResponse<List<UserResponse>>> getUsers() {
+        List<UserResponse> users = userService.getUsers();
+        return ResponseEntity.ok(ApiResponse.success(users));
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or #id == principal.id")
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
-        User user = userService.getUserById(id).orElseThrow();
-        return ResponseEntity.ok(user);
-    }
-
-    @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<User> createUser(@RequestBody User user) {
-        User createdUser = userService.createUser(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
+    @PreAuthorize("hasRole('ADMIN') or #id == @userService.getUserById(#id).getId()")
+    public ResponseEntity<ApiResponse<UserResponse>> getUserById(@PathVariable Long id) {
+        UserResponse user = userService.getUserById(id);
+        return ResponseEntity.ok(ApiResponse.success(user));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or #id == principal.id")
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User user) {
-        User updatedUser = userService.updateUser(id, user);
-        return ResponseEntity.ok(updatedUser);
+    @PreAuthorize("hasRole('ADMIN') or #id == @userService.getUserById(#id).getId()")
+    public ResponseEntity<ApiResponse<UserResponse>> updateUser(@PathVariable Long id, @RequestBody User user) {
+        UserResponse updatedUser = userService.updateUser(id, user);
+        return ResponseEntity.ok(ApiResponse.success("更新成功", updatedUser));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponse.success("删除成功", null));
     }
 }

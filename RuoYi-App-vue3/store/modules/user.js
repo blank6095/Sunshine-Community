@@ -1,11 +1,11 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import config from '@/config'
 import storage from '@/utils/storage'
 import constant from '@/utils/constant'
 import { isHttp, isEmpty } from "@/utils/validate"
 import { getInfo, login, logout } from '@/api/login'
-import { getToken, removeToken, setToken } from '@/utils/auth'
+import { getToken, removeToken, setToken, hasValidToken, clearAuthStorage, getAuthStatus } from '@/utils/auth'
 import defAva from '@/static/images/profile.jpg'
 
 const baseUrl = config.baseUrl
@@ -17,9 +17,19 @@ export const useUserStore = defineStore('user', () => {
   const avatar = ref(storage.get(constant.avatar))
   const roles = ref(storage.get(constant.roles))
   const permissions = ref(storage.get(constant.permissions))
+  const isLoading = ref(false)
+  const loginState = ref(hasValidToken())
 
-  const SET_TOKEN = (val) => {
+  // 计算属性
+  const isLoggedIn = computed(() => hasValidToken())
+  const authStatus = computed(() => getAuthStatus())
+
+  const SET_TOKEN = (val, expireTime) => {
     token.value = val
+    loginState.value = !!val
+    if (val) {
+      setToken(val, expireTime)
+    }
   }
   const SET_ID = (val) => {
     id.value = val
@@ -42,26 +52,43 @@ export const useUserStore = defineStore('user', () => {
     storage.set(constant.permissions, val)
   }
 
-  // 登录
+  const CLEAR_USER_STATE = () => {
+    token.value = ''
+    id.value = ''
+    name.value = ''
+    avatar.value = ''
+    roles.value = []
+    permissions.value = []
+    loginState.value = false
+  }
+
   const loginAction = (userInfo) => {
     const username = userInfo.username.trim()
     const password = userInfo.password
     const code = userInfo.code
     const uuid = userInfo.uuid
     return new Promise((resolve, reject) => {
+      isLoading.value = true
       login(username, password, code, uuid).then(res => {
-        setToken(res.token)
-        SET_TOKEN(res.token)
+        const expireTime = res.expireTime || 7 * 24 * 60 * 60 * 1000
+        SET_TOKEN(res.token, expireTime)
+        isLoading.value = false
         resolve()
       }).catch(error => {
+        isLoading.value = false
         reject(error)
       })
     })
   }
 
-  // 获取用户信息
   const getInfoAction = () => {
     return new Promise((resolve, reject) => {
+      if (!hasValidToken()) {
+        reject(new Error('未登录或登录已过期'))
+        return
+      }
+      
+      isLoading.value = true
       getInfo().then(res => {
         const user = res.user
         let avatar = user.avatar || ""
@@ -76,30 +103,48 @@ export const useUserStore = defineStore('user', () => {
         } else {
           SET_ROLES(['ROLE_DEFAULT'])
         }
-		SET_ID(userid)
+        SET_ID(userid)
         SET_NAME(username)
         SET_AVATAR(avatar)
+        isLoading.value = false
         resolve(res)
       }).catch(error => {
+        isLoading.value = false
         reject(error)
       })
     })
   }
 
-  // 退出系统
   const logOutAction = () => {
     return new Promise((resolve, reject) => {
-      logout(token.value).then(() => {
-        SET_TOKEN('')
-        SET_ROLES([])
-        SET_PERMISSIONS([])
-        removeToken()
-        storage.clean()
+      if (hasValidToken()) {
+        logout(token.value).then(() => {
+          clearSession()
+          resolve()
+        }).catch(() => {
+          clearSession()
+          resolve()
+        })
+      } else {
+        clearSession()
         resolve()
-      }).catch(error => {
-        reject(error)
-      })
+      }
     })
+  }
+
+  const clearSession = () => {
+    CLEAR_USER_STATE()
+    clearAuthStorage()
+    storage.clean()
+  }
+
+  const resetStore = () => {
+    clearSession()
+  }
+
+  const checkAuthStatus = () => {
+    loginState.value = hasValidToken()
+    return loginState.value
   }
 
   return {
@@ -109,9 +154,17 @@ export const useUserStore = defineStore('user', () => {
     avatar,
     roles,
     permissions,
+    isLoading,
+    loginState,
+    isLoggedIn,
+    authStatus,
+    SET_TOKEN,
     SET_AVATAR,
     login: loginAction,
     getInfo: getInfoAction,
-    logOut: logOutAction
+    logout: logOutAction,
+    resetStore,
+    clearSession,
+    checkAuthStatus
   }
 })

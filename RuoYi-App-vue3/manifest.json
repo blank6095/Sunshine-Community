@@ -60,7 +60,17 @@
         "template" : "static/index.html",
         "devServer" : {
             "port" : 9090,
-            "https" : false
+            "https" : false,
+            "proxy" : {
+                "/api" : {
+                    "target" : "http://localhost:8080",
+                    "changeOrigin" : true,
+                    "secure" : false,
+                    "pathRewrite" : {
+                        "^/api" : "/api"
+                    }
+                }
+            }
         },
         "title" : "RuoYi-App",
         "router" : {

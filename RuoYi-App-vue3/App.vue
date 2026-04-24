@@ -15,20 +15,10 @@
   function initApp() {
     // 初始化应用配置
     initConfig()
-    // 检查用户登录状态
-    //#ifdef H5
-    checkLogin()
-    //#endif
   }
 
   function initConfig() {
     useConfigStore().setConfig(config)
-  }
-
-  function checkLogin() {
-    if (!getToken()) {
-      proxy.$tab.reLaunch('/pages/login') 
-    }
   }
 </script>
 

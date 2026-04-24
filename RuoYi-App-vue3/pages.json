@@ -1,5 +1,11 @@
 {
   "pages": [{
+    "path": "pages/hospital/index",
+    "style": {
+      "navigationBarTitleText": "智慧医院",
+      "navigationStyle": "custom"
+    }
+  }, {
     "path": "pages/login",
     "style": {
       "navigationBarTitleText": "登录"
@@ -10,15 +16,49 @@
       "navigationBarTitleText": "注册"
     }
   }, {
-    "path": "pages/index",
+    "path": "pages/hospital/department",
     "style": {
-      "navigationBarTitleText": "若依移动端框架",
-      "navigationStyle": "custom"
+      "navigationBarTitleText": "科室列表"
     }
   }, {
-    "path": "pages/work/index",
+    "path": "pages/hospital/doctor",
     "style": {
-      "navigationBarTitleText": "工作台"
+      "navigationBarTitleText": "医生列表"
+    }
+  }, {
+    "path": "pages/hospital/doctor-detail",
+    "style": {
+      "navigationBarTitleText": "医生详情"
+    }
+  }, {
+    "path": "pages/hospital/appointment",
+    "style": {
+      "navigationBarTitleText": "预约挂号"
+    }
+  }, {
+    "path": "pages/hospital/my-appointment",
+    "style": {
+      "navigationBarTitleText": "我的预约"
+    }
+  }, {
+    "path": "pages/hospital/appointment-detail",
+    "style": {
+      "navigationBarTitleText": "预约详情"
+    }
+  }, {
+    "path": "pages/hospital/announcement",
+    "style": {
+      "navigationBarTitleText": "医院公告"
+    }
+  }, {
+    "path": "pages/hospital/announcement-detail",
+    "style": {
+      "navigationBarTitleText": "公告详情"
+    }
+  }, {
+    "path": "pages/hospital/guide",
+    "style": {
+      "navigationBarTitleText": "就医指南"
     }
   }, {
     "path": "pages/mine/index",
@@ -72,20 +112,20 @@
     }
   }],
   "tabBar": {
-    "color": "#000000",
-    "selectedColor": "#000000",
+    "color": "#666666",
+    "selectedColor": "#2979ff",
     "borderStyle": "white",
     "backgroundColor": "#ffffff",
     "list": [{
-        "pagePath": "pages/index",
+        "pagePath": "pages/hospital/index",
         "iconPath": "static/images/tabbar/home.png",
         "selectedIconPath": "static/images/tabbar/home_.png",
         "text": "首页"
       }, {
-        "pagePath": "pages/work/index",
+        "pagePath": "pages/hospital/my-appointment",
         "iconPath": "static/images/tabbar/work.png",
         "selectedIconPath": "static/images/tabbar/work_.png",
-        "text": "工作台"
+        "text": "预约"
       }, {
         "pagePath": "pages/mine/index",
         "iconPath": "static/images/tabbar/mine.png",
@@ -96,7 +136,7 @@
   },
   "globalStyle": {
     "navigationBarTextStyle": "black",
-    "navigationBarTitleText": "RuoYi",
+    "navigationBarTitleText": "智慧医院",
     "navigationBarBackgroundColor": "#FFFFFF"
   }
 }

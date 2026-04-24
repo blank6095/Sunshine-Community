@@ -1,9 +1,11 @@
 package com.exclusive.blank.controller;
 
+import com.exclusive.blank.dto.ApiResponse;
+import com.exclusive.blank.dto.AppointmentResponse;
 import com.exclusive.blank.model.Appointment;
 import com.exclusive.blank.service.AppointmentService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -19,71 +21,82 @@ public class AppointmentController {
     private AppointmentService appointmentService;
 
     @GetMapping
-    public ResponseEntity<List<Appointment>> getAppointments() {
-        List<Appointment> appointments = appointmentService.getAppointments();
-        return ResponseEntity.ok(appointments);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<AppointmentResponse>>> getAppointments() {
+        List<AppointmentResponse> appointments = appointmentService.getAppointments();
+        return ResponseEntity.ok(ApiResponse.success(appointments));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Appointment> getAppointmentById(@PathVariable Long id) {
-        Appointment appointment = appointmentService.getAppointmentById(id).orElseThrow();
-        return ResponseEntity.ok(appointment);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<AppointmentResponse>> getAppointmentById(@PathVariable Long id) {
+        AppointmentResponse appointment = appointmentService.getAppointmentById(id);
+        return ResponseEntity.ok(ApiResponse.success(appointment));
     }
 
     @PostMapping
     @PreAuthorize("hasRole('PATIENT')")
-    public ResponseEntity<Appointment> createAppointment(@RequestBody Appointment appointment) {
-        Appointment createdAppointment = appointmentService.createAppointment(appointment);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdAppointment);
+    public ResponseEntity<ApiResponse<AppointmentResponse>> createAppointment(@RequestBody Appointment appointment) {
+        AppointmentResponse createdAppointment = appointmentService.createAppointment(appointment);
+        return ResponseEntity.status(201).body(ApiResponse.created(createdAppointment));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('DOCTOR') or @appointmentService.getAppointmentById(#id).get().getPatient().getId() == principal.id")
-    public ResponseEntity<Appointment> updateAppointment(@PathVariable Long id, @RequestBody Appointment appointment) {
-        Appointment updatedAppointment = appointmentService.updateAppointment(id, appointment);
-        return ResponseEntity.ok(updatedAppointment);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<AppointmentResponse>> updateAppointment(@PathVariable Long id, @RequestBody Appointment appointment) {
+        AppointmentResponse updatedAppointment = appointmentService.updateAppointment(id, appointment);
+        return ResponseEntity.ok(ApiResponse.success("更新成功", updatedAppointment));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('DOCTOR') or @appointmentService.getAppointmentById(#id).get().getPatient().getId() == principal.id")
-    public ResponseEntity<Void> deleteAppointment(@PathVariable Long id) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> deleteAppointment(@PathVariable Long id) {
         appointmentService.deleteAppointment(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponse.success("删除成功", null));
     }
 
     @GetMapping("/patient/{patientId}")
-    public ResponseEntity<List<Appointment>> getAppointmentsByPatientId(@PathVariable Long patientId) {
-        List<Appointment> appointments = appointmentService.getAppointmentsByPatientId(patientId);
-        return ResponseEntity.ok(appointments);
+    @PreAuthorize("hasRole('ADMIN') or #patientId == authentication.principal.id")
+    public ResponseEntity<ApiResponse<List<AppointmentResponse>>> getAppointmentsByPatientId(@PathVariable Long patientId) {
+        List<AppointmentResponse> appointments = appointmentService.getAppointmentsByPatientId(patientId);
+        return ResponseEntity.ok(ApiResponse.success(appointments));
     }
 
     @GetMapping("/doctor/{doctorId}")
-    public ResponseEntity<List<Appointment>> getAppointmentsByDoctorId(@PathVariable Long doctorId) {
-        List<Appointment> appointments = appointmentService.getAppointmentsByDoctorId(doctorId);
-        return ResponseEntity.ok(appointments);
+    @PreAuthorize("hasRole('ADMIN') or #doctorId == @doctorService.getDoctorByUserId(authentication.principal.id).userId")
+    public ResponseEntity<ApiResponse<List<AppointmentResponse>>> getAppointmentsByDoctorId(@PathVariable Long doctorId) {
+        List<AppointmentResponse> appointments = appointmentService.getAppointmentsByDoctorId(doctorId);
+        return ResponseEntity.ok(ApiResponse.success(appointments));
     }
 
     @GetMapping("/schedule/{scheduleId}")
-    public ResponseEntity<List<Appointment>> getAppointmentsByScheduleId(@PathVariable Long scheduleId) {
-        List<Appointment> appointments = appointmentService.getAppointmentsByScheduleId(scheduleId);
-        return ResponseEntity.ok(appointments);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<AppointmentResponse>>> getAppointmentsByScheduleId(@PathVariable Long scheduleId) {
+        List<AppointmentResponse> appointments = appointmentService.getAppointmentsByScheduleId(scheduleId);
+        return ResponseEntity.ok(ApiResponse.success(appointments));
     }
 
     @GetMapping("/status/{status}")
-    public ResponseEntity<List<Appointment>> getAppointmentsByStatus(@PathVariable String status) {
-        List<Appointment> appointments = appointmentService.getAppointmentsByStatus(status);
-        return ResponseEntity.ok(appointments);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<AppointmentResponse>>> getAppointmentsByStatus(@PathVariable String status) {
+        List<AppointmentResponse> appointments = appointmentService.getAppointmentsByStatus(status);
+        return ResponseEntity.ok(ApiResponse.success(appointments));
     }
 
     @GetMapping("/patient/{patientId}/status/{status}")
-    public ResponseEntity<List<Appointment>> getAppointmentsByPatientIdAndStatus(@PathVariable Long patientId, @PathVariable String status) {
-        List<Appointment> appointments = appointmentService.getAppointmentsByPatientIdAndStatus(patientId, status);
-        return ResponseEntity.ok(appointments);
+    @PreAuthorize("hasRole('ADMIN') or #patientId == authentication.principal.id")
+    public ResponseEntity<ApiResponse<List<AppointmentResponse>>> getAppointmentsByPatientIdAndStatus(
+            @PathVariable Long patientId, @PathVariable String status) {
+        List<AppointmentResponse> appointments = appointmentService.getAppointmentsByPatientIdAndStatus(patientId, status);
+        return ResponseEntity.ok(ApiResponse.success(appointments));
     }
 
     @GetMapping("/time-range")
-    public ResponseEntity<List<Appointment>> getAppointmentsByTimeRange(@RequestParam LocalDateTime start, @RequestParam LocalDateTime end) {
-        List<Appointment> appointments = appointmentService.getAppointmentsByTimeRange(start, end);
-        return ResponseEntity.ok(appointments);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<AppointmentResponse>>> getAppointmentsByTimeRange(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
+        List<AppointmentResponse> appointments = appointmentService.getAppointmentsByTimeRange(start, end);
+        return ResponseEntity.ok(ApiResponse.success(appointments));
     }
 }

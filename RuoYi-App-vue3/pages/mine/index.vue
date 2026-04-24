@@ -1,88 +1,105 @@
 <template>
   <view class="mine-container" :style="{height: `${windowHeight}px`}">
-    <!--顶部个人信息栏-->
     <view class="header-section">
-      <view class="flex padding justify-between">
-        <view class="flex align-center">
-          <view v-if="!avatar" class="cu-avatar xl round bg-white">
-            <view class="iconfont icon-people text-gray icon"></view>
-          </view>
-          <image v-if="avatar" @click="handleToAvatar" :src="avatar" class="cu-avatar xl round" mode="widthFix">
-          </image>
-          <view v-if="!name" @click="handleToLogin" class="login-tip">
-            点击登录
-          </view>
-          <view v-if="name" @click="handleToInfo" class="user-info">
-            <view class="u_title">
-              用户名：{{ name }}
+      <view class="header-bg"></view>
+      <view class="header-content">
+        <view class="user-card">
+          <view class="avatar-section" @click="handleToAvatar">
+            <image v-if="avatar" :src="avatar" class="user-avatar" mode="aspectFill"></image>
+            <view v-else class="user-avatar default-avatar">
+              <uni-icons type="person-filled" size="40" color="#fff"></uni-icons>
             </view>
           </view>
-        </view>
-        <view @click="handleToInfo" class="flex align-center">
-          <text>个人信息</text>
-          <view class="iconfont icon-right"></view>
+          <view class="user-info" @click="handleToInfo">
+            <view v-if="!name" class="login-tip">点击登录</view>
+            <view v-else>
+              <text class="user-name">{{ name }}</text>
+              <text class="user-role">患者用户</text>
+            </view>
+          </view>
+          <view class="arrow-icon" @click="handleToInfo">
+            <uni-icons type="right" size="18" color="#fff"></uni-icons>
+          </view>
         </view>
       </view>
     </view>
 
     <view class="content-section">
-      <view class="mine-actions grid col-4 text-center">
-        <view class="action-item" @click="handleJiaoLiuQun">
-          <view class="iconfont icon-friendfill text-pink icon"></view>
-          <text class="text">交流群</text>
+      <view class="quick-actions">
+        <view class="action-item" @click="goToAppointment">
+          <view class="action-icon" style="background: #e8f4ff;">
+            <uni-icons type="calendar" size="24" color="#2979ff"></uni-icons>
+          </view>
+          <text class="action-text">我的预约</text>
         </view>
-        <view class="action-item" @click="handleBuilding">
-          <view class="iconfont icon-service text-blue icon"></view>
-          <text class="text">在线客服</text>
+        <view class="action-item" @click="goToMedicalRecord">
+          <view class="action-icon" style="background: #fff8e6;">
+            <uni-icons type="list" size="24" color="#ff9900"></uni-icons>
+          </view>
+          <text class="action-text">就诊记录</text>
         </view>
-        <view class="action-item" @click="handleBuilding">
-          <view class="iconfont icon-community text-mauve icon"></view>
-          <text class="text">反馈社区</text>
+        <view class="action-item" @click="goToGuide">
+          <view class="action-icon" style="background: #e8f8e8;">
+            <uni-icons type="help" size="24" color="#19be6b"></uni-icons>
+          </view>
+          <text class="action-text">就医指南</text>
         </view>
-        <view class="action-item" @click="handleBuilding">
-          <view class="iconfont icon-dianzan text-green icon"></view>
-          <text class="text">点赞我们</text>
+        <view class="action-item" @click="goToAnnouncement">
+          <view class="action-icon" style="background: #fff0f0;">
+            <uni-icons type="sound" size="24" color="#fa3534"></uni-icons>
+          </view>
+          <text class="action-text">医院公告</text>
         </view>
       </view>
 
       <view class="menu-list">
         <view class="list-cell list-cell-arrow" @click="handleToEditInfo">
           <view class="menu-item-box">
-            <view class="iconfont icon-user menu-icon"></view>
-            <view>编辑资料</view>
+            <uni-icons type="person" size="20" color="#2979ff" class="menu-icon"></uni-icons>
+            <view>个人信息</view>
+          </view>
+        </view>
+        <view class="list-cell list-cell-arrow" @click="handleToPwd">
+          <view class="menu-item-box">
+            <uni-icons type="locked" size="20" color="#ff9900" class="menu-icon"></uni-icons>
+            <view>修改密码</view>
           </view>
         </view>
         <view class="list-cell list-cell-arrow" @click="handleHelp">
           <view class="menu-item-box">
-            <view class="iconfont icon-help menu-icon"></view>
+            <uni-icons type="help" size="20" color="#19be6b" class="menu-icon"></uni-icons>
             <view>常见问题</view>
           </view>
         </view>
         <view class="list-cell list-cell-arrow" @click="handleAbout">
           <view class="menu-item-box">
-            <view class="iconfont icon-aixin menu-icon"></view>
+            <uni-icons type="info" size="20" color="#fa3534" class="menu-icon"></uni-icons>
             <view>关于我们</view>
           </view>
         </view>
         <view class="list-cell list-cell-arrow" @click="handleToSetting">
           <view class="menu-item-box">
-            <view class="iconfont icon-setting menu-icon"></view>
-            <view>应用设置</view>
+            <uni-icons type="gear" size="20" color="#666" class="menu-icon"></uni-icons>
+            <view>设置</view>
           </view>
         </view>
       </view>
 
+      <view class="logout-btn" v-if="name" @click="handleLogout">
+        <text>退出登录</text>
+      </view>
     </view>
   </view>
 </template>
 
 <script setup>
   import { useUserStore } from '@/store'
-  import { computed , getCurrentInstance } from "vue"
+  import { computed, getCurrentInstance } from "vue"
 
   const { proxy } = getCurrentInstance()
-  const name = useUserStore().name
-  const avatar = computed(() => useUserStore().avatar)
+  const userStore = useUserStore()
+  const name = computed(() => userStore.name)
+  const avatar = computed(() => userStore.avatar)
   const windowHeight = computed(() => uni.getSystemInfoSync().windowHeight - 50)
 
   function handleToInfo() {
@@ -91,6 +108,10 @@
 
   function handleToEditInfo() {
     proxy.$tab.navigateTo('/pages/mine/info/edit')
+  }
+
+  function handleToPwd() {
+    proxy.$tab.navigateTo('/pages/mine/pwd/index')
   }
 
   function handleToSetting() {
@@ -112,74 +133,201 @@
   function handleAbout() {
     proxy.$tab.navigateTo('/pages/mine/about/index')
   }
-      
-  function handleJiaoLiuQun() {
-    proxy.$modal.showToast('QQ群：①133713780(满)、②146013835(满)、③189091635')
+
+  function goToAppointment() {
+    proxy.$tab.navigateTo('/pages/hospital/my-appointment')
   }
-      
-  function handleBuilding() {
-    proxy.$modal.showToast('模块建设中~')
+
+  function goToMedicalRecord() {
+    proxy.$modal.showToast('功能开发中')
+  }
+
+  function goToGuide() {
+    proxy.$tab.navigateTo('/pages/hospital/guide')
+  }
+
+  function goToAnnouncement() {
+    proxy.$tab.navigateTo('/pages/hospital/announcement')
+  }
+
+  function handleLogout() {
+    uni.showModal({
+      title: '提示',
+      content: '确定要退出登录吗？',
+      success: (res) => {
+        if (res.confirm) {
+          userStore.logOut().then(() => {
+            proxy.$tab.reLaunch('/pages/login')
+          })
+        }
+      }
+    })
   }
 </script>
 
 <style lang="scss" scoped>
   page {
-    background-color: #f5f6f7;
+    background-color: #f5f7fa;
   }
 
   .mine-container {
     width: 100%;
     height: 100%;
 
-
     .header-section {
-      padding: 15px 15px 45px 15px;
-      background-color: #3c96f3;
-      color: white;
-
-      .login-tip {
-        font-size: 18px;
-        margin-left: 10px;
+      position: relative;
+      
+      .header-bg {
+        height: 200rpx;
+        background: linear-gradient(135deg, #2979ff 0%, #1e88e5 100%);
       }
-
-      .cu-avatar {
-        border: 2px solid #eaeaea;
-
-        .icon {
-          font-size: 40px;
-        }
-      }
-
-      .user-info {
-        margin-left: 15px;
-
-        .u_title {
-          font-size: 18px;
-          line-height: 30px;
+      
+      .header-content {
+        position: relative;
+        margin-top: -100rpx;
+        padding: 0 30rpx;
+        
+        .user-card {
+          display: flex;
+          align-items: center;
+          background: #fff;
+          padding: 30rpx;
+          border-radius: 20rpx;
+          box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.1);
+          
+          .avatar-section {
+            margin-right: 24rpx;
+            
+            .user-avatar {
+              width: 120rpx;
+              height: 120rpx;
+              border-radius: 50%;
+              overflow: hidden;
+              
+              &.default-avatar {
+                background: linear-gradient(135deg, #2979ff 0%, #1e88e5 100%);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              }
+            }
+          }
+          
+          .user-info {
+            flex: 1;
+            
+            .login-tip {
+              font-size: 32rpx;
+              color: #2979ff;
+            }
+            
+            .user-name {
+              display: block;
+              font-size: 36rpx;
+              font-weight: bold;
+              color: #333;
+            }
+            
+            .user-role {
+              display: block;
+              font-size: 26rpx;
+              color: #999;
+              margin-top: 8rpx;
+            }
+          }
+          
+          .arrow-icon {
+            padding: 10rpx;
+          }
         }
       }
     }
 
     .content-section {
-      position: relative;
-      top: -50px;
-
-      .mine-actions {
-        margin: 15px 15px;
-        padding: 20px 0px;
-        border-radius: 8px;
-        background-color: white;
-
+      padding: 20rpx;
+      
+      .quick-actions {
+        display: flex;
+        justify-content: space-around;
+        background: #fff;
+        padding: 30rpx 20rpx;
+        border-radius: 16rpx;
+        margin-bottom: 20rpx;
+        
         .action-item {
-          .icon {
-            font-size: 28px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          
+          .action-icon {
+            width: 80rpx;
+            height: 80rpx;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12rpx;
+          }
+          
+          .action-text {
+            font-size: 26rpx;
+            color: #333;
+          }
+        }
+      }
+      
+      .menu-list {
+        background: #fff;
+        border-radius: 16rpx;
+        overflow: hidden;
+        margin-bottom: 20rpx;
+
+        .list-cell {
+          padding: 24rpx 30rpx;
+          border-bottom: 1rpx solid #f0f0f0;
+          
+          &:last-child {
+            border-bottom: none;
+          }
+          
+          &.list-cell-arrow::before {
+            content: '';
+            position: absolute;
+            right: 30rpx;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 12rpx;
+            height: 12rpx;
+            border-top: 2rpx solid #ccc;
+            border-right: 2rpx solid #ccc;
+            transform: translateY(-50%) rotate(45deg);
           }
 
-          .text {
-            display: block;
-            font-size: 13px;
-            margin: 8px 0px;
+          .menu-item-box {
+            display: flex;
+            align-items: center;
+            
+            .menu-icon {
+              margin-right: 20rpx;
+            }
+            
+            view {
+              font-size: 30rpx;
+              color: #333;
+            }
           }
+        }
+      }
+      
+      .logout-btn {
+        background: #fff;
+        padding: 30rpx;
+        border-radius: 16rpx;
+        text-align: center;
+        
+        text {
+          font-size: 30rpx;
+          color: #fa3534;
         }
       }
     }

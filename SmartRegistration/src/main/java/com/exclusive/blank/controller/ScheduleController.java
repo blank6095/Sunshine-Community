@@ -1,9 +1,11 @@
 package com.exclusive.blank.controller;
 
+import com.exclusive.blank.dto.ApiResponse;
+import com.exclusive.blank.dto.ScheduleResponse;
 import com.exclusive.blank.model.Schedule;
 import com.exclusive.blank.service.ScheduleService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -19,59 +21,62 @@ public class ScheduleController {
     private ScheduleService scheduleService;
 
     @GetMapping
-    public ResponseEntity<List<Schedule>> getSchedules() {
-        List<Schedule> schedules = scheduleService.getSchedules();
-        return ResponseEntity.ok(schedules);
+    public ResponseEntity<ApiResponse<List<ScheduleResponse>>> getSchedules() {
+        List<ScheduleResponse> schedules = scheduleService.getSchedules();
+        return ResponseEntity.ok(ApiResponse.success(schedules));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Schedule> getScheduleById(@PathVariable Long id) {
-        Schedule schedule = scheduleService.getScheduleById(id).orElseThrow();
-        return ResponseEntity.ok(schedule);
+    public ResponseEntity<ApiResponse<ScheduleResponse>> getScheduleById(@PathVariable Long id) {
+        ScheduleResponse schedule = scheduleService.getScheduleById(id);
+        return ResponseEntity.ok(ApiResponse.success(schedule));
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN') or @scheduleService.getScheduleById(#schedule.doctor.id).get().getDoctor().getUser().getId() == principal.id")
-    public ResponseEntity<Schedule> createSchedule(@RequestBody Schedule schedule) {
-        Schedule createdSchedule = scheduleService.createSchedule(schedule);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdSchedule);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<ScheduleResponse>> createSchedule(@RequestBody Schedule schedule) {
+        ScheduleResponse createdSchedule = scheduleService.createSchedule(schedule);
+        return ResponseEntity.status(201).body(ApiResponse.created(createdSchedule));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or @scheduleService.getScheduleById(#id).get().getDoctor().getUser().getId() == principal.id")
-    public ResponseEntity<Schedule> updateSchedule(@PathVariable Long id, @RequestBody Schedule schedule) {
-        Schedule updatedSchedule = scheduleService.updateSchedule(id, schedule);
-        return ResponseEntity.ok(updatedSchedule);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<ScheduleResponse>> updateSchedule(@PathVariable Long id, @RequestBody Schedule schedule) {
+        ScheduleResponse updatedSchedule = scheduleService.updateSchedule(id, schedule);
+        return ResponseEntity.ok(ApiResponse.success("更新成功", updatedSchedule));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or @scheduleService.getScheduleById(#id).get().getDoctor().getUser().getId() == principal.id")
-    public ResponseEntity<Void> deleteSchedule(@PathVariable Long id) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> deleteSchedule(@PathVariable Long id) {
         scheduleService.deleteSchedule(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponse.success("删除成功", null));
     }
 
     @GetMapping("/doctor/{doctorId}")
-    public ResponseEntity<List<Schedule>> getSchedulesByDoctorId(@PathVariable Long doctorId) {
-        List<Schedule> schedules = scheduleService.getSchedulesByDoctorId(doctorId);
-        return ResponseEntity.ok(schedules);
+    public ResponseEntity<ApiResponse<List<ScheduleResponse>>> getSchedulesByDoctorId(@PathVariable Long doctorId) {
+        List<ScheduleResponse> schedules = scheduleService.getSchedulesByDoctorId(doctorId);
+        return ResponseEntity.ok(ApiResponse.success(schedules));
     }
 
     @GetMapping("/date/{date}")
-    public ResponseEntity<List<Schedule>> getSchedulesByDate(@PathVariable LocalDate date) {
-        List<Schedule> schedules = scheduleService.getSchedulesByDate(date);
-        return ResponseEntity.ok(schedules);
+    public ResponseEntity<ApiResponse<List<ScheduleResponse>>> getSchedulesByDate(
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        List<ScheduleResponse> schedules = scheduleService.getSchedulesByDate(date);
+        return ResponseEntity.ok(ApiResponse.success(schedules));
     }
 
     @GetMapping("/doctor/{doctorId}/date/{date}")
-    public ResponseEntity<List<Schedule>> getSchedulesByDoctorIdAndDate(@PathVariable Long doctorId, @PathVariable LocalDate date) {
-        List<Schedule> schedules = scheduleService.getSchedulesByDoctorIdAndDate(doctorId, date);
-        return ResponseEntity.ok(schedules);
+    public ResponseEntity<ApiResponse<List<ScheduleResponse>>> getSchedulesByDoctorIdAndDate(
+            @PathVariable Long doctorId,
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        List<ScheduleResponse> schedules = scheduleService.getSchedulesByDoctorIdAndDate(doctorId, date);
+        return ResponseEntity.ok(ApiResponse.success(schedules));
     }
 
     @GetMapping("/status/{status}")
-    public ResponseEntity<List<Schedule>> getSchedulesByStatus(@PathVariable String status) {
-        List<Schedule> schedules = scheduleService.getSchedulesByStatus(status);
-        return ResponseEntity.ok(schedules);
+    public ResponseEntity<ApiResponse<List<ScheduleResponse>>> getSchedulesByStatus(@PathVariable String status) {
+        List<ScheduleResponse> schedules = scheduleService.getSchedulesByStatus(status);
+        return ResponseEntity.ok(ApiResponse.success(schedules));
     }
 }

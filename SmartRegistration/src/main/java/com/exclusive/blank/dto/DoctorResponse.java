@@ -2,12 +2,23 @@ package com.exclusive.blank.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.time.LocalDateTime;
+
 public class DoctorResponse {
     @JsonProperty("id")
     private Long id;
 
     @JsonProperty("userId")
     private Long userId;
+
+    @JsonProperty("userName")
+    private String userName;
+
+    @JsonProperty("userPhone")
+    private String userPhone;
+
+    @JsonProperty("userEmail")
+    private String userEmail;
 
     @JsonProperty("departmentId")
     private Long departmentId;
@@ -27,30 +38,31 @@ public class DoctorResponse {
     @JsonProperty("status")
     private String status;
 
-    @JsonProperty("userName")
-    private String userName;
+    @JsonProperty("createdAt")
+    private LocalDateTime createdAt;
 
-    @JsonProperty("userEmail")
-    private String userEmail;
-
-    @JsonProperty("userPhone")
-    private String userPhone;
+    @JsonProperty("updatedAt")
+    private LocalDateTime updatedAt;
 
     public DoctorResponse() {
     }
 
-    public DoctorResponse(Long id, Long userId, Long departmentId, String departmentName, String title, String specialty, String bio, String status, String userName, String userEmail, String userPhone) {
+    public DoctorResponse(Long id, Long userId, String userName, String userPhone, String userEmail,
+                          Long departmentId, String departmentName, String title, String specialty,
+                          String bio, String status, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.userId = userId;
+        this.userName = userName;
+        this.userPhone = userPhone;
+        this.userEmail = userEmail;
         this.departmentId = departmentId;
         this.departmentName = departmentName;
         this.title = title;
         this.specialty = specialty;
         this.bio = bio;
         this.status = status;
-        this.userName = userName;
-        this.userEmail = userEmail;
-        this.userPhone = userPhone;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
     public Long getId() {
@@ -67,6 +79,30 @@ public class DoctorResponse {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public String getUserPhone() {
+        return userPhone;
+    }
+
+    public void setUserPhone(String userPhone) {
+        this.userPhone = userPhone;
+    }
+
+    public String getUserEmail() {
+        return userEmail;
+    }
+
+    public void setUserEmail(String userEmail) {
+        this.userEmail = userEmail;
     }
 
     public Long getDepartmentId() {
@@ -117,27 +153,19 @@ public class DoctorResponse {
         this.status = status;
     }
 
-    public String getUserName() {
-        return userName;
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
-    public void setUserName(String userName) {
-        this.userName = userName;
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
-    public String getUserEmail() {
-        return userEmail;
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
     }
 
-    public void setUserEmail(String userEmail) {
-        this.userEmail = userEmail;
-    }
-
-    public String getUserPhone() {
-        return userPhone;
-    }
-
-    public void setUserPhone(String userPhone) {
-        this.userPhone = userPhone;
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

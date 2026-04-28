@@ -34,7 +34,10 @@ public enum ErrorCode {
     APPOINTMENT_NOT_FOUND(5001, "预约不存在"),
     APPOINTMENT_COMPLETED(5002, "预约已完成，无法操作"),
     APPOINTMENT_CANCELLED(5003, "预约已取消，无法操作"),
-    APPOINTMENT_TIME_PASSED(5004, "预约时间已过，无法操作");
+    APPOINTMENT_TIME_PASSED(5004, "预约时间已过，无法操作"),
+
+    // 权限相关错误
+    PERMISSION_DENIED(6001, "权限不足，无法执行此操作");
 
     private final int code;
     private final String message;

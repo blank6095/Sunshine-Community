@@ -31,21 +31,21 @@ public class DepartmentController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<ApiResponse<DepartmentResponse>> createDepartment(@RequestBody Department department) {
         DepartmentResponse createdDepartment = departmentService.createDepartment(department);
         return ResponseEntity.status(201).body(ApiResponse.created(createdDepartment));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<ApiResponse<DepartmentResponse>> updateDepartment(@PathVariable Long id, @RequestBody Department department) {
         DepartmentResponse updatedDepartment = departmentService.updateDepartment(id, department);
         return ResponseEntity.ok(ApiResponse.success("更新成功", updatedDepartment));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteDepartment(@PathVariable Long id) {
         departmentService.deleteDepartment(id);
         return ResponseEntity.ok(ApiResponse.success("删除成功", null));

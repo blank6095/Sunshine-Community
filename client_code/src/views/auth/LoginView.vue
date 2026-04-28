@@ -54,11 +54,12 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { Toast } from 'vant'
+import { useRouter, useRoute } from 'vue-router'
+import { Toast, showNotify } from 'vant'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 
 const loginForm = ref({
@@ -67,14 +68,48 @@ const loginForm = ref({
 })
 
 const loading = ref(false)
+const errorMessage = ref('')
 
 async function handleLogin() {
+  errorMessage.value = ''
   loading.value = true
+  
   try {
-    await authStore.login(loginForm.value)
-    Toast.success('登录成功')
-    router.push('/')
+    const userData = await authStore.login(loginForm.value)
+    
+    showNotify({
+      type: 'success',
+      message: `欢迎回来，${userData.user?.name || userData.user?.username || '用户'}！`,
+      duration: 2000,
+    })
+    
+    const redirectPath = route.query.redirect || '/'
+    setTimeout(() => {
+      router.replace(redirectPath)
+    }, 300)
   } catch (err) {
+    const errorMsg = err.message || '登录失败，请检查用户名和密码'
+    errorMessage.value = errorMsg
+    
+    if (errorMsg.includes('用户不存在') || errorMsg.includes('密码错误')) {
+      showNotify({
+        type: 'danger',
+        message: '用户名或密码错误，请重新输入',
+        duration: 3000,
+      })
+    } else if (errorMsg.includes('网络连接') || errorMsg.includes('超时')) {
+      showNotify({
+        type: 'warning',
+        message: '网络连接失败，请检查网络后重试',
+        duration: 3000,
+      })
+    } else {
+      showNotify({
+        type: 'danger',
+        message: errorMsg,
+        duration: 3000,
+      })
+    }
   } finally {
     loading.value = false
   }

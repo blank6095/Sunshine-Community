@@ -24,8 +24,7 @@ const activeTab = computed(() => {
   return ''
 })
 
-const hideTabbarRoutes = ['/login', '/register', '/forgot-password']
-const showTabbar = computed(() => !hideTabbarRoutes.includes(route.path))
+const showTabbar = computed(() => !route.meta.hideTabbar)
 </script>
 
 <style scoped>

@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/admin/auth-exemption")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAuthority('ADMIN')")
 public class AuthExemptionController {
 
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AuthExemptionController.class);

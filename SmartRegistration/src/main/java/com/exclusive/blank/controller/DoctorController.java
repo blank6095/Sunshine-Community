@@ -31,21 +31,21 @@ public class DoctorController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<ApiResponse<DoctorResponse>> createDoctor(@RequestBody Doctor doctor) {
         DoctorResponse createdDoctor = doctorService.createDoctor(doctor);
         return ResponseEntity.status(201).body(ApiResponse.created(createdDoctor));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or @doctorService.getDoctorById(#id).getUserId() == @userService.getCurrentUser().getId()")
+    @PreAuthorize("hasAuthority('ADMIN') or @doctorService.getDoctorById(#id).getUserId() == @userService.getCurrentUser().getId()")
     public ResponseEntity<ApiResponse<DoctorResponse>> updateDoctor(@PathVariable Long id, @RequestBody Doctor doctor) {
         DoctorResponse updatedDoctor = doctorService.updateDoctor(id, doctor);
         return ResponseEntity.ok(ApiResponse.success("更新成功", updatedDoctor));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteDoctor(@PathVariable Long id) {
         doctorService.deleteDoctor(id);
         return ResponseEntity.ok(ApiResponse.success("删除成功", null));

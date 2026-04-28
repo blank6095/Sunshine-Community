@@ -18,6 +18,11 @@ export const useAuthStore = defineStore('auth', {
   actions: {
     async login(credentials) {
       const res = await login(credentials)
+      
+      if (!res.data?.token || !res.data?.user) {
+        throw new Error('登录响应数据异常')
+      }
+      
       this.token = res.data.token
       this.user = res.data.user
       this.isLoggedIn = true
@@ -40,8 +45,11 @@ export const useAuthStore = defineStore('auth', {
 
     async updateProfile(data) {
       const res = await updateUser(this.userId, data)
-      this.user = res.data
-      localStorage.setItem('user', JSON.stringify(res.data))
+      
+      const updatedUser = { ...this.user, ...res.data }
+      this.user = updatedUser
+      localStorage.setItem('user', JSON.stringify(updatedUser))
+      
       return res.data
     },
 

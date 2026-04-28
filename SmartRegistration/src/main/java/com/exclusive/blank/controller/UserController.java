@@ -19,28 +19,28 @@ public class UserController {
     private UserService userService;
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<ApiResponse<List<UserResponse>>> getUsers() {
         List<UserResponse> users = userService.getUsers();
         return ResponseEntity.ok(ApiResponse.success(users));
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or #id == @userService.getUserById(#id).getId()")
+    @PreAuthorize("hasAuthority('ADMIN') or #id == @userService.getUserById(#id).getId()")
     public ResponseEntity<ApiResponse<UserResponse>> getUserById(@PathVariable Long id) {
         UserResponse user = userService.getUserById(id);
         return ResponseEntity.ok(ApiResponse.success(user));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or #id == @userService.getUserById(#id).getId()")
+    @PreAuthorize("hasAuthority('ADMIN') or #id == @userService.getUserById(#id).getId()")
     public ResponseEntity<ApiResponse<UserResponse>> updateUser(@PathVariable Long id, @RequestBody User user) {
         UserResponse updatedUser = userService.updateUser(id, user);
         return ResponseEntity.ok(ApiResponse.success("更新成功", updatedUser));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.ok(ApiResponse.success("删除成功", null));

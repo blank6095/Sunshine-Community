@@ -5,10 +5,13 @@ import com.exclusive.blank.exception.BusinessException;
 import com.exclusive.blank.exception.ErrorCode;
 import com.exclusive.blank.model.Appointment;
 import com.exclusive.blank.model.Schedule;
+import com.exclusive.blank.model.User;
 import com.exclusive.blank.repository.AppointmentRepository;
+import com.exclusive.blank.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -26,6 +29,9 @@ public class AppointmentService {
     @Autowired
     private ScheduleService scheduleService;
 
+    @Autowired
+    private UserRepository userRepository;
+
     public List<AppointmentResponse> getAppointments() {
         List<Appointment> appointments = appointmentRepository.findAll();
         return appointments.stream()
@@ -42,7 +48,7 @@ public class AppointmentService {
         return toAppointmentResponse(appointment);
     }
 
-    public AppointmentResponse createAppointment(Appointment appointment) {
+    public AppointmentResponse createAppointment(Appointment appointment, UserDetails currentUser) {
         if (appointment.getPatient() == null || appointment.getPatient().getId() == null) {
             throw new BusinessException(ErrorCode.BAD_REQUEST, "患者ID不能为空");
         }
@@ -55,29 +61,33 @@ public class AppointmentService {
             throw new BusinessException(ErrorCode.BAD_REQUEST, "排班ID不能为空");
         }
 
-        // 检查排班是否存在且状态为ACTIVE
+        User authenticatedUser = userRepository.findByUsername(currentUser.getUsername())
+            .orElseThrow(() -> new BusinessException(ErrorCode.BAD_REQUEST, "当前用户不存在"));
+
+        if (!authenticatedUser.getId().equals(appointment.getPatient().getId())) {
+            logger.warn("权限拒绝: 当前用户尝试为其他患者创建预约 | 当前用户ID: {}, 请求患者ID: {}",
+                authenticatedUser.getId(), appointment.getPatient().getId());
+            throw new BusinessException(ErrorCode.PERMISSION_DENIED, "只能为自己创建预约");
+        }
+
         Schedule schedule = scheduleService.getScheduleEntity(appointment.getSchedule().getId());
         if (!"ACTIVE".equals(schedule.getStatus())) {
             logger.warn("排班已取消: scheduleId={}", schedule.getId());
             throw new BusinessException(ErrorCode.SCHEDULE_CANCELLED);
         }
 
-        // 检查排班是否已满
         if (schedule.getAvailableSlots() <= 0) {
             logger.warn("排班已满: scheduleId={}", schedule.getId());
             throw new BusinessException(ErrorCode.SCHEDULE_FULL);
         }
 
-        // 检查预约时间
         if (appointment.getAppointmentTime() == null) {
             throw new BusinessException(ErrorCode.BAD_REQUEST, "预约时间不能为空");
         }
 
-        // 创建预约
         appointment.setStatus("PENDING");
         Appointment savedAppointment = appointmentRepository.save(appointment);
 
-        // 更新排班可用预约数
         scheduleService.updateAvailableSlots(schedule.getId(), -1);
 
         logger.info("预约创建成功: id={}, patientId={}, doctorId={}", savedAppointment.getId(),

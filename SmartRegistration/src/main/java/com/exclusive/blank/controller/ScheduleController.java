@@ -33,21 +33,24 @@ public class ScheduleController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<ApiResponse<ScheduleResponse>> createSchedule(@RequestBody Schedule schedule) {
-        ScheduleResponse createdSchedule = scheduleService.createSchedule(schedule);
+        ScheduleResponse createdSchedule = scheduleService.create
+
+
+        Schedule(schedule);
         return ResponseEntity.status(201).body(ApiResponse.created(createdSchedule));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<ApiResponse<ScheduleResponse>> updateSchedule(@PathVariable Long id, @RequestBody Schedule schedule) {
         ScheduleResponse updatedSchedule = scheduleService.updateSchedule(id, schedule);
         return ResponseEntity.ok(ApiResponse.success("更新成功", updatedSchedule));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteSchedule(@PathVariable Long id) {
         scheduleService.deleteSchedule(id);
         return ResponseEntity.ok(ApiResponse.success("删除成功", null));

@@ -24,7 +24,12 @@ public class CustomUserDetailsService implements UserDetailsService {
         return new org.springframework.security.core.userdetails.User(
             user.getUsername(),
             user.getPassword(),
-            Collections.singleton(() -> "ROLE_" + user.getRole())
+            Collections.singletonList(new org.springframework.security.core.GrantedAuthority() {
+                @Override
+                public String getAuthority() {
+                    return user.getRole();
+                }
+            })
         );
     }
 }
